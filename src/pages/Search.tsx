@@ -1,0 +1,194 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  searchArticlesWithFilters,
+  fetchNewsSources,
+  type SearchFilters,
+} from "../services/newsApi";
+import ArticleCard from "../components/ArticleCard";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorMessage from "../components/ErrorMessage";
+import SearchFiltersComponent from "../components/SearchFilters";
+
+function Search() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<SearchFilters>({
+    sortBy: "publishedAt",
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Fetch available news sources
+  const { data: sourcesData } = useQuery({
+    queryKey: ["news-sources"],
+    queryFn: fetchNewsSources,
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+
+  // Search articles with current filters
+  const {
+    data: searchResults,
+    isPending: isSearching,
+    error: searchError,
+    refetch: refetchSearch,
+    isFetching,
+  } = useQuery({
+    queryKey: ["search-articles", filters],
+    queryFn: () => searchArticlesWithFilters(filters),
+    enabled:
+      hasSearched &&
+      (!!filters.query ||
+        !!filters.category ||
+        !!filters.sources ||
+        !!filters.from),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const hasSearchCriteria =
+      searchQuery.trim() || filters.category || filters.sources || filters.from;
+
+    if (hasSearchCriteria) {
+      setFilters((prev) => ({ ...prev, query: searchQuery.trim() }));
+      setHasSearched(true);
+      setTimeout(() => refetchSearch(), 100);
+    }
+  };
+
+  const handleFiltersChange = (newFilters: SearchFilters) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    const hasNewSearchCriteria =
+      searchQuery.trim() ||
+      newFilters.category ||
+      newFilters.sources ||
+      newFilters.from;
+
+    if (hasNewSearchCriteria) {
+      setHasSearched(true);
+      setTimeout(() => refetchSearch(), 100);
+    }
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setFilters({ sortBy: "publishedAt" });
+    setHasSearched(false);
+  };
+
+  const articles = searchResults?.articles || [];
+  const totalResults = searchResults?.totalResults || 0;
+  const availableSources = sourcesData?.sources || [];
+
+  const hasSearchCriteria =
+    searchQuery.trim() || filters.category || filters.sources || filters.from;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
+          Search News
+        </h1>
+
+        <SearchFiltersComponent
+          isVisible={showFilters}
+          onFiltersChange={handleFiltersChange}
+          onClearAll={clearAllFilters}
+          availableSources={availableSources}
+          currentFilters={filters}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          onSearch={handleSearch}
+          isSearching={isSearching}
+          hasSearchCriteria={!!hasSearchCriteria}
+          hasSearched={hasSearched}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+        />
+
+        <div className="max-w-7xl mx-auto">
+          {hasSearched && isSearching && <LoadingSpinner />}
+
+          {hasSearched && searchError && (
+            <ErrorMessage
+              message="Failed to search articles. Please try again with different search terms."
+              onRetry={() => refetchSearch()}
+            />
+          )}
+
+          {hasSearched &&
+            !isSearching &&
+            !searchError &&
+            articles.length > 0 && (
+              <>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-600">
+                      {totalResults > 0 ? (
+                        <>
+                          Found{" "}
+                          <span className="font-semibold">
+                            {totalResults.toLocaleString()}
+                          </span>{" "}
+                          articles
+                          {filters.query && (
+                            <>
+                              {" "}
+                              for "
+                              <span className="font-semibold">
+                                {filters.query}
+                              </span>
+                              "
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        "No articles found"
+                      )}
+                    </p>
+                    {isFetching && (
+                      <div className="text-sm text-gray-500">
+                        Updating results...
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Articles Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {articles.map((article, index) => (
+                    <ArticleCard
+                      key={`${article.url}-${index}`}
+                      article={article}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+          {hasSearched &&
+            !isSearching &&
+            !searchError &&
+            articles.length === 0 && (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No articles found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your search terms or filters to find more
+                  results.
+                </p>
+                <button
+                  onClick={clearAllFilters}
+                  className="text-red-600 hover:text-red-700 font-medium"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Search;
