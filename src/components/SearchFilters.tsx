@@ -1,24 +1,18 @@
 import { useForm, Controller } from "react-hook-form";
 import Select from "react-select";
 import { HiFilter, HiSearch, HiCalendar } from "react-icons/hi";
-import { type SearchFilters } from "../services/newsApi";
-
-const categories = [
-  { value: "business", label: "Business" },
-  { value: "entertainment", label: "Entertainment" },
-  { value: "general", label: "General" },
-  { value: "health", label: "Health" },
-  { value: "science", label: "Science" },
-  { value: "sports", label: "Sports" },
-  { value: "technology", label: "Technology" },
-];
+import {
+  type ExtendedSearchFilters,
+  type EnhancedSource,
+} from "../middleware/interfaces/aggregatorInterfaces";
 
 interface SearchFiltersProps {
   isVisible: boolean;
-  onFiltersChange: (filters: SearchFilters) => void;
+  onFiltersChange: (filters: ExtendedSearchFilters) => void;
   onClearAll: () => void;
-  availableSources: Array<{ id: string; name: string }>;
-  currentFilters: SearchFilters;
+  availableSources: EnhancedSource[];
+  availableCategories: Array<{ id: string; webTitle: string }>;
+  currentFilters: ExtendedSearchFilters;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   onSearch: (e: React.FormEvent) => void;
@@ -39,6 +33,7 @@ export default function SearchFilters({
   onFiltersChange,
   onClearAll,
   availableSources,
+  availableCategories,
   currentFilters,
   searchQuery,
   onSearchQueryChange,
@@ -48,6 +43,12 @@ export default function SearchFilters({
   hasSearched,
   onToggleFilters,
 }: SearchFiltersProps) {
+  // Convert Guardian sections to category options
+  const categories = availableCategories.map((section) => ({
+    value: section.id,
+    label: section.webTitle,
+  }));
+
   const { control, reset, getValues } = useForm<FormData>({
     defaultValues: {
       date: currentFilters.from || "",
@@ -72,7 +73,7 @@ export default function SearchFilters({
 
   const handleApplyFilters = () => {
     const data = getValues();
-    const filters: SearchFilters = {
+    const filters: ExtendedSearchFilters = {
       sortBy: "publishedAt", // Default sort
       from: data.date || undefined,
       to: data.date || undefined, // Same date for both from and to
@@ -88,8 +89,8 @@ export default function SearchFilters({
 
     // Remove undefined values
     Object.keys(filters).forEach((key) => {
-      if (filters[key as keyof SearchFilters] === undefined) {
-        delete filters[key as keyof SearchFilters];
+      if (filters[key as keyof ExtendedSearchFilters] === undefined) {
+        delete filters[key as keyof ExtendedSearchFilters];
       }
     });
 
@@ -175,7 +176,7 @@ export default function SearchFilters({
       </form>
 
       {/* Initial Help Section */}
-      {!hasSearched && (
+      {!hasSearched && !isVisible && (
         <div className="text-center text-gray-500 mb-6">
           <p className="text-lg mb-6">
             Search for news articles by entering keywords, or use the filters to

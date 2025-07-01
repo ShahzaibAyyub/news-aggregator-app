@@ -1,37 +1,9 @@
 import axios from "axios";
 import { NEWSAPI_BASE_URL } from "../shared/constants";
-
-export interface NewsArticle {
-  source: {
-    id: string | null;
-    name: string;
-  };
-  author: string | null;
-  title: string;
-  description: string | null;
-  url: string;
-  urlToImage: string | null;
-  publishedAt: string;
-  content: string | null;
-}
-
-export interface NewsResponse {
-  status: string;
-  totalResults: number;
-  articles: NewsArticle[];
-}
-
-export interface SearchFilters {
-  query?: string;
-  category?: string;
-  sources?: string;
-  domains?: string;
-  from?: string;
-  to?: string;
-  language?: string;
-  sortBy?: "relevancy" | "popularity" | "publishedAt";
-  country?: string;
-}
+import type {
+  NewsResponse,
+  SearchFilters,
+} from "../middleware/interfaces/newsApiInterfaces";
 
 const NEWSAPI_KEY = import.meta.env.VITE_NEWSAPI_KEY;
 
@@ -42,10 +14,10 @@ const newsApi = axios.create({
   },
 });
 
-export const fetchWSJArticles = async (): Promise<NewsResponse> => {
-  const response = await newsApi.get("/everything", {
+export const fetchTopStories = async (): Promise<NewsResponse> => {
+  const response = await newsApi.get("/top-headlines", {
     params: {
-      domains: "wsj.com",
+      country: "us",
     },
   });
   return response.data;
@@ -108,23 +80,5 @@ export const searchArticlesWithFilters = async (
   }
 
   const response = await newsApi.get(endpoint, { params });
-  return response.data;
-};
-
-// Get available news sources
-export const fetchNewsSources = async (): Promise<{
-  status: string;
-  sources: Array<{
-    id: string;
-    name: string;
-    category: string;
-    country: string;
-  }>;
-}> => {
-  const response = await newsApi.get("/sources", {
-    params: {
-      language: "en",
-    },
-  });
   return response.data;
 };

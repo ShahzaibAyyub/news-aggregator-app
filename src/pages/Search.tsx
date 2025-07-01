@@ -1,28 +1,37 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  searchArticlesWithFilters,
-  fetchNewsSources,
-  type SearchFilters,
-} from "../services/newsApi";
+  searchAllSources,
+  getGuardianSections,
+} from "../middleware/aggregatedNewsService";
 import ArticleCard from "../components/ArticleCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import SearchFiltersComponent from "../components/SearchFilters";
+import {
+  getAllAvailableSources,
+  STALE_TIME,
+  REFRESH_INTERVAL,
+} from "../shared/constants";
+import { SourceType } from "../shared/enums";
+import type { ExtendedSearchFilters } from "../middleware/interfaces/aggregatorInterfaces";
 
 function Search() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState<SearchFilters>({
+  const [filters, setFilters] = useState<ExtendedSearchFilters>({
     sortBy: "publishedAt",
+    sourceType: SourceType.BOTH,
   });
   const [showFilters, setShowFilters] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Fetch available news sources
-  const { data: sourcesData } = useQuery({
-    queryKey: ["news-sources"],
-    queryFn: fetchNewsSources,
-    staleTime: 60 * 60 * 1000, // 1 hour
+  // Get hardcoded available sources
+  const availableSources = getAllAvailableSources();
+
+  // Fetch Guardian sections for categories
+  const { data: categoriesData } = useQuery({
+    queryKey: ["guardian-sections"],
+    queryFn: getGuardianSections,
   });
 
   // Search articles with current filters
@@ -33,15 +42,16 @@ function Search() {
     refetch: refetchSearch,
     isFetching,
   } = useQuery({
-    queryKey: ["search-articles", filters],
-    queryFn: () => searchArticlesWithFilters(filters),
+    queryKey: ["search-all-sources", filters],
+    queryFn: () => searchAllSources(filters),
     enabled:
       hasSearched &&
       (!!filters.query ||
         !!filters.category ||
         !!filters.sources ||
         !!filters.from),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: STALE_TIME,
+    refetchInterval: REFRESH_INTERVAL,
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -56,7 +66,7 @@ function Search() {
     }
   };
 
-  const handleFiltersChange = (newFilters: SearchFilters) => {
+  const handleFiltersChange = (newFilters: ExtendedSearchFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
     const hasNewSearchCriteria =
       searchQuery.trim() ||
@@ -72,16 +82,26 @@ function Search() {
 
   const clearAllFilters = () => {
     setSearchQuery("");
-    setFilters({ sortBy: "publishedAt" });
+    setFilters({ sortBy: "publishedAt", sourceType: SourceType.BOTH });
     setHasSearched(false);
   };
 
   const articles = searchResults?.articles || [];
   const totalResults = searchResults?.totalResults || 0;
-  const availableSources = sourcesData?.sources || [];
+  const availableCategories = categoriesData || [];
+  const searchSources = searchResults?.sources || [];
 
   const hasSearchCriteria =
     searchQuery.trim() || filters.category || filters.sources || filters.from;
+
+  // Only show searching state when query is enabled and actually running
+  const isActuallySearching =
+    isSearching &&
+    hasSearched &&
+    (!!filters.query ||
+      !!filters.category ||
+      !!filters.sources ||
+      !!filters.from);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,18 +115,19 @@ function Search() {
           onFiltersChange={handleFiltersChange}
           onClearAll={clearAllFilters}
           availableSources={availableSources}
+          availableCategories={availableCategories}
           currentFilters={filters}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
           onSearch={handleSearch}
-          isSearching={isSearching}
+          isSearching={isActuallySearching}
           hasSearchCriteria={!!hasSearchCriteria}
           hasSearched={hasSearched}
           onToggleFilters={() => setShowFilters(!showFilters)}
         />
 
         <div className="max-w-7xl mx-auto">
-          {hasSearched && isSearching && <LoadingSpinner />}
+          {hasSearched && isActuallySearching && <LoadingSpinner />}
 
           {hasSearched && searchError && (
             <ErrorMessage
@@ -116,7 +137,7 @@ function Search() {
           )}
 
           {hasSearched &&
-            !isSearching &&
+            !isActuallySearching &&
             !searchError &&
             articles.length > 0 && (
               <>
@@ -138,6 +159,15 @@ function Search() {
                                 {filters.query}
                               </span>
                               "
+                            </>
+                          )}
+                          {searchSources.length > 0 && (
+                            <>
+                              {" "}
+                              from{" "}
+                              <span className="font-semibold">
+                                {searchSources.join(", ")}
+                              </span>
                             </>
                           )}
                         </>
@@ -166,7 +196,7 @@ function Search() {
             )}
 
           {hasSearched &&
-            !isSearching &&
+            !isActuallySearching &&
             !searchError &&
             articles.length === 0 && (
               <div className="text-center py-12">
