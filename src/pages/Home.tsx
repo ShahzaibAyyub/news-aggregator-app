@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchWSJArticles } from "../services/newsApi";
+import { fetchAllTopStories } from "../middleware/aggregatedNewsService";
 import ArticleCard from "../components/ArticleCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import SidebarArticleCard from "../components/SidebarArticleCard";
-
+import { STALE_TIME, REFRESH_INTERVAL } from "../shared/constants";
 function Home() {
   const {
     data: newsData,
@@ -12,10 +12,10 @@ function Home() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["wsj-articles"],
-    queryFn: fetchWSJArticles,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    queryKey: ["all-top-stories"],
+    queryFn: fetchAllTopStories,
+    staleTime: STALE_TIME,
+    refetchInterval: REFRESH_INTERVAL,
   });
 
   if (isPending) return <LoadingSpinner />;
@@ -23,7 +23,7 @@ function Home() {
   if (error) {
     return (
       <ErrorMessage
-        message="Failed to load Wall Street Journal articles. Please check your connection and try again."
+        message="Failed to load news articles. Please check your connection and try again."
         onRetry={() => refetch()}
       />
     );
@@ -33,6 +33,7 @@ function Home() {
   const articles = newsData?.articles || [];
   const featuredArticle = articles[0];
   const regularArticles = articles.slice(1);
+  const availableSources = newsData?.sources || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -82,7 +83,8 @@ function Home() {
             {/* Stats */}
             <div className="mt-12 text-center">
               <p className="text-gray-500 text-sm">
-                Showing {articles.length} articles from The Wall Street Journal
+                Showing {articles.length} articles from{" "}
+                {availableSources.join(", ")}
               </p>
             </div>
           </>
