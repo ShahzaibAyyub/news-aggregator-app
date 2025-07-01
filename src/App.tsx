@@ -1,12 +1,19 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./Layout";
+import Home from "./pages/Home";
+import Search from "./pages/Search";
 import "./App.css";
 
 function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline text-blue-500">
-        News Aggregator App
-      </h1>
-    </>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<Search />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 
