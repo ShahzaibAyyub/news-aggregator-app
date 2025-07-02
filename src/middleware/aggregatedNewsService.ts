@@ -1,4 +1,4 @@
-import { SourceType } from "../shared/enums";
+import { SourceType, SourceName } from "../shared/enums";
 import type { NewsResponse } from "../middleware/interfaces/newsApiInterfaces";
 import {
   searchArticlesWithFilters,
@@ -10,31 +10,36 @@ import {
   fetchGuardianTopStories,
   fetchGuardianSections,
 } from "../services/guardianApi";
+import type { NyTimesSearchResponse } from "../middleware/interfaces/nyTimesInterfaces";
+import {
+  fetchNyTimesTopStories,
+  searchNyTimesWithFilters,
+} from "../services/nyTimesApi";
 import { convertNewsApiArticlesToUnified } from "./mappers/newsApiMapper";
 import { convertGuardianArticlesToUnified } from "./mappers/guardianMapper";
 import {
-  convertToNewsApiFilters,
-  shouldIncludeNewsApi,
-  shouldExcludeNewsApiForCategory,
-} from "./filters/newsApiFilters";
-import {
-  convertToGuardianParams,
-  shouldIncludeGuardian,
-  determineSourceType,
-} from "./filters/guardianFilters";
+  convertNyTimesArticlesToUnified,
+  convertNyTimesMostPopularToUnified,
+} from "./mappers/nyTimesMapper";
+import { convertToNewsApiFilters } from "./filters/newsApiFilters";
+import { convertToGuardianParams } from "./filters/guardianFilters";
+import { convertToNyTimesParams } from "./filters/nyTimesFilters";
 import type {
   UnifiedNewsResponse,
   UnifiedArticle,
-  ExtendedSearchFilters,
 } from "./interfaces/aggregatorInterfaces";
+import type { SearchFilters } from "./interfaces/newsApiInterfaces";
+import { isMostPopularResponse } from "../shared/utils";
 
-// Fetch articles from both sources for home page
+// Fetch articles from all sources for home page
 export const fetchAllTopStories = async (): Promise<UnifiedNewsResponse> => {
   try {
-    const [newsApiResponse, guardianResponse] = await Promise.allSettled([
-      fetchTopStories(),
-      fetchGuardianTopStories(),
-    ]);
+    const [newsApiResponse, guardianResponse, nyTimesResponse] =
+      await Promise.allSettled([
+        fetchTopStories(),
+        fetchGuardianTopStories(),
+        fetchNyTimesTopStories(),
+      ]);
 
     const articles: UnifiedArticle[] = [];
     const sources: string[] = [];
@@ -45,7 +50,7 @@ export const fetchAllTopStories = async (): Promise<UnifiedNewsResponse> => {
         newsApiResponse.value.articles
       );
       articles.push(...unifiedNewsApiArticles);
-      sources.push("NewsAPI");
+      sources.push(SourceName.NEWSAPI);
     }
 
     // Process Guardian results
@@ -54,7 +59,29 @@ export const fetchAllTopStories = async (): Promise<UnifiedNewsResponse> => {
         guardianResponse.value.results
       );
       articles.push(...unifiedGuardianArticles);
-      sources.push("The Guardian");
+      sources.push(SourceName.GUARDIAN);
+    }
+
+    // Process NY Times results
+    if (nyTimesResponse.status === "fulfilled") {
+      const response = nyTimesResponse.value;
+      let unifiedNyTimesArticles: UnifiedArticle[];
+
+      if (isMostPopularResponse(response)) {
+        // Most Popular API response
+        unifiedNyTimesArticles = convertNyTimesMostPopularToUnified(
+          response.results
+        );
+      } else {
+        // Search API response
+        const searchResponse = response as NyTimesSearchResponse;
+        unifiedNyTimesArticles = convertNyTimesArticlesToUnified(
+          searchResponse.response.docs
+        );
+      }
+
+      articles.push(...unifiedNyTimesArticles);
+      sources.push(SourceName.NYTIMES);
     }
 
     // Sort by publication date (newest first)
@@ -75,31 +102,30 @@ export const fetchAllTopStories = async (): Promise<UnifiedNewsResponse> => {
   }
 };
 
-// Search articles from both sources
+// Search articles from all sources
 export const searchAllSources = async (
-  filters: ExtendedSearchFilters
+  filters: SearchFilters
 ): Promise<UnifiedNewsResponse> => {
   try {
     const promises: Promise<any>[] = [];
 
-    // Determine which sources to search based on selected sources
-    let effectiveSourceType = filters.sourceType || SourceType.BOTH;
+    // Determine which sources to search
+    let shouldSearchNewsApi = true;
+    let shouldSearchGuardian = true;
+    let shouldSearchNyTimes = true;
 
-    // If specific sources are selected, determine the source type from them
+    // If specific sources are selected, only search those
     if (filters.sources) {
-      const selectedSourceIds = filters.sources.split(",");
-      effectiveSourceType = determineSourceType(selectedSourceIds);
+      const selectedSources = filters.sources.split(",");
+      shouldSearchNewsApi = selectedSources.includes(SourceType.NEWSAPI);
+      shouldSearchGuardian = selectedSources.includes(SourceType.GUARDIAN);
+      shouldSearchNyTimes = selectedSources.includes(SourceType.NYTIMES);
     }
 
-    // Check which sources should be included
-    const shouldSearchNewsApi = shouldIncludeNewsApi({
-      ...filters,
-      sourceType: effectiveSourceType,
-    });
-    const shouldSearchGuardian = shouldIncludeGuardian({
-      ...filters,
-      sourceType: effectiveSourceType,
-    });
+    // If categories are set, don't call NewsAPI as it doesn't have a category param
+    if (filters.category) {
+      shouldSearchNewsApi = false;
+    }
 
     if (shouldSearchNewsApi) {
       const newsApiFilters = convertToNewsApiFilters(filters);
@@ -111,6 +137,11 @@ export const searchAllSources = async (
       promises.push(fetchGuardianContent(guardianParams));
     }
 
+    if (shouldSearchNyTimes) {
+      const nyTimesParams = convertToNyTimesParams(filters);
+      promises.push(searchNyTimesWithFilters(nyTimesParams));
+    }
+
     const results = await Promise.allSettled(promises);
     const articles: UnifiedArticle[] = [];
     const sources: string[] = [];
@@ -118,7 +149,7 @@ export const searchAllSources = async (
 
     let resultIndex = 0;
 
-    // Process NewsAPI results - but exclude them if category is selected because NewsAPI doesn't support categories
+    // Process NewsAPI results
     if (
       shouldSearchNewsApi &&
       results[resultIndex] &&
@@ -127,21 +158,18 @@ export const searchAllSources = async (
       const newsApiResponse = (
         results[resultIndex] as PromiseFulfilledResult<NewsResponse>
       ).value;
-
-      // Only include NewsAPI results if no category is selected (NewsAPI doesn't support categories)
-      if (!shouldExcludeNewsApiForCategory(filters)) {
-        const unifiedNewsApiArticles = convertNewsApiArticlesToUnified(
-          newsApiResponse.articles
-        );
-        articles.push(...unifiedNewsApiArticles);
-        totalResults += newsApiResponse.totalResults;
-        sources.push("NewsAPI");
-      }
+      const unifiedNewsApiArticles = convertNewsApiArticlesToUnified(
+        newsApiResponse.articles
+      );
+      articles.push(...unifiedNewsApiArticles);
+      totalResults += newsApiResponse.totalResults;
+      sources.push(SourceName.NEWSAPI);
       resultIndex++;
     } else if (shouldSearchNewsApi) {
       resultIndex++;
     }
 
+    // Process Guardian results
     if (
       shouldSearchGuardian &&
       results[resultIndex] &&
@@ -155,7 +183,27 @@ export const searchAllSources = async (
       );
       articles.push(...unifiedGuardianArticles);
       totalResults += guardianResponse.total;
-      sources.push("The Guardian");
+      sources.push(SourceName.GUARDIAN);
+      resultIndex++;
+    } else if (shouldSearchGuardian) {
+      resultIndex++;
+    }
+
+    // Process NY Times results
+    if (
+      shouldSearchNyTimes &&
+      results[resultIndex] &&
+      results[resultIndex].status === "fulfilled"
+    ) {
+      const nyTimesResponse = (
+        results[resultIndex] as PromiseFulfilledResult<NyTimesSearchResponse>
+      ).value;
+      const unifiedNyTimesArticles = convertNyTimesArticlesToUnified(
+        nyTimesResponse.response.docs
+      );
+      articles.push(...unifiedNyTimesArticles);
+      totalResults += nyTimesResponse.response.metadata.hits;
+      sources.push(SourceName.NYTIMES);
     }
 
     // Sort by publication date (newest first)

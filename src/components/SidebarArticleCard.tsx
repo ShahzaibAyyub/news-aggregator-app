@@ -1,5 +1,5 @@
 import { formatDate } from "../shared/utils";
-import type { NewsArticle } from "../services/newsApi";
+import type { NewsArticle } from "../middleware/interfaces/newsApiInterfaces";
 
 interface SidebarArticleCardProps {
   article: NewsArticle;

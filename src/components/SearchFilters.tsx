@@ -1,18 +1,16 @@
 import { useForm, Controller } from "react-hook-form";
 import Select from "react-select";
 import { HiFilter, HiSearch, HiCalendar } from "react-icons/hi";
-import {
-  type ExtendedSearchFilters,
-  type EnhancedSource,
-} from "../middleware/interfaces/aggregatorInterfaces";
+import type { SearchFilters } from "../middleware/interfaces/newsApiInterfaces";
+import type { EnhancedSource } from "../middleware/interfaces/aggregatorInterfaces";
 
 interface SearchFiltersProps {
   isVisible: boolean;
-  onFiltersChange: (filters: ExtendedSearchFilters) => void;
+  onFiltersChange: (filters: SearchFilters) => void;
   onClearAll: () => void;
   availableSources: EnhancedSource[];
   availableCategories: Array<{ id: string; webTitle: string }>;
-  currentFilters: ExtendedSearchFilters;
+  currentFilters: SearchFilters;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   onSearch: (e: React.FormEvent) => void;
@@ -73,7 +71,7 @@ export default function SearchFilters({
 
   const handleApplyFilters = () => {
     const data = getValues();
-    const filters: ExtendedSearchFilters = {
+    const filters: SearchFilters = {
       sortBy: "publishedAt", // Default sort
       from: data.date || undefined,
       to: data.date || undefined, // Same date for both from and to
@@ -89,8 +87,8 @@ export default function SearchFilters({
 
     // Remove undefined values
     Object.keys(filters).forEach((key) => {
-      if (filters[key as keyof ExtendedSearchFilters] === undefined) {
-        delete filters[key as keyof ExtendedSearchFilters];
+      if (filters[key as keyof SearchFilters] === undefined) {
+        delete filters[key as keyof SearchFilters];
       }
     });
 

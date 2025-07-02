@@ -3,7 +3,7 @@ import type {
   UnifiedArticle,
   SourceInfo,
 } from "../interfaces/aggregatorInterfaces";
-import { SourceType } from "../../shared/enums";
+import { SourceType, SourceName } from "../../shared/enums";
 
 /**
  * Convert multiple NewsAPI articles to unified format
@@ -21,7 +21,7 @@ export const convertNewsApiToUnified = (
     ...newsArticle,
     source: {
       id: SourceType.NEWSAPI,
-      name: "NewsAPI",
+      name: SourceName.NEWSAPI,
     },
     sourceInfo: {
       type: SourceType.NEWSAPI,

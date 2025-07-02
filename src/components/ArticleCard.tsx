@@ -1,4 +1,4 @@
-import type { NewsArticle } from "../services/newsApi";
+import type { NewsArticle } from "../middleware/interfaces/newsApiInterfaces";
 import { formatDate, truncateText } from "../shared/utils";
 
 interface ArticleCardProps {

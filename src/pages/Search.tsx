@@ -13,14 +13,12 @@ import {
   STALE_TIME,
   REFRESH_INTERVAL,
 } from "../shared/constants";
-import { SourceType } from "../shared/enums";
-import type { ExtendedSearchFilters } from "../middleware/interfaces/aggregatorInterfaces";
+import type { SearchFilters } from "../middleware/interfaces/newsApiInterfaces";
 
 function Search() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState<ExtendedSearchFilters>({
+  const [filters, setFilters] = useState<SearchFilters>({
     sortBy: "publishedAt",
-    sourceType: SourceType.BOTH,
   });
   const [showFilters, setShowFilters] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -66,7 +64,7 @@ function Search() {
     }
   };
 
-  const handleFiltersChange = (newFilters: ExtendedSearchFilters) => {
+  const handleFiltersChange = (newFilters: SearchFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
     const hasNewSearchCriteria =
       searchQuery.trim() ||
@@ -82,7 +80,7 @@ function Search() {
 
   const clearAllFilters = () => {
     setSearchQuery("");
-    setFilters({ sortBy: "publishedAt", sourceType: SourceType.BOTH });
+    setFilters({ sortBy: "publishedAt" });
     setHasSearched(false);
   };
 

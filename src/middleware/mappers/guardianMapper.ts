@@ -6,7 +6,7 @@ import type {
   UnifiedArticle,
   SourceInfo,
 } from "../interfaces/aggregatorInterfaces";
-import { SourceType } from "../../shared/enums";
+import { SourceType, SourceName } from "../../shared/enums";
 import { PAGE_SIZE } from "../../shared/constants";
 
 /**
@@ -22,8 +22,8 @@ export const convertGuardianToNewsApi = (
 
   return {
     source: {
-      id: "the-guardian",
-      name: "The Guardian",
+      id: SourceType.GUARDIAN,
+      name: SourceName.GUARDIAN,
     },
     author,
     title: guardianArticle.fields?.headline || guardianArticle.webTitle,

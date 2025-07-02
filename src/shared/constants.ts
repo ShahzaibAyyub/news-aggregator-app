@@ -1,19 +1,24 @@
 import type { EnhancedSource } from "../middleware/interfaces/aggregatorInterfaces";
-import { SourceType } from "./enums";
+import { SourceName, SourceType } from "./enums";
 import type { NavTabProps } from "./interfaces";
 
-// Get available sources (hardcoded to NewsAPI and Guardian only)
+// Get available sources (hardcoded to NewsAPI, Guardian, and NY Times)
 export const getAllAvailableSources = (): EnhancedSource[] => {
   return [
     {
       id: SourceType.NEWSAPI,
-      name: "NewsAPI",
+      name: SourceName.NEWSAPI,
       type: SourceType.NEWSAPI,
     },
     {
-      id: "the-guardian",
-      name: "The Guardian",
+      id: SourceType.GUARDIAN,
+      name: SourceName.GUARDIAN,
       type: SourceType.GUARDIAN,
+    },
+    {
+      id: SourceType.NYTIMES,
+      name: SourceName.NYTIMES,
+      type: SourceType.NYTIMES,
     },
   ];
 };
@@ -25,6 +30,7 @@ export const navTabs: NavTabProps[] = [
 
 export const NEWSAPI_BASE_URL = "https://newsapi.org/v2";
 export const GUARDIAN_BASE_URL = "https://content.guardianapis.com";
+export const NYTIMES_BASE_URL = "https://api.nytimes.com";
 
 export const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 export const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
