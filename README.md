@@ -13,6 +13,12 @@ A modern news aggregator built with React, TypeScript, TanStack Query, and Tailw
 - 💫 Smooth loading states and error handling
 - 🌐 Multi-source aggregation with duplicate detection
 
+## App Demo
+
+🎥 **[Watch the App Demo Video](https://www.awesomescreenshot.com/video/41588942?key=5dc8cb6cf2a6db00b5dc9c2965fb5146)**
+
+See the News Aggregator App in action! The demo showcases all the key features including real-time news fetching, advanced search functionality, and the responsive newspaper-style layout.
+
 ## News Sources
 
 - **NewsAPI** - Comprehensive news from various publishers
