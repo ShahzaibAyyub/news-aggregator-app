@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { HiCog, HiX } from "react-icons/hi";
@@ -16,6 +16,7 @@ interface PersonalizedFeedSettingsProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  onClear?: () => void;
 }
 
 interface FormData {
@@ -27,11 +28,12 @@ export default function PersonalizedFeedSettings({
   isOpen,
   onClose,
   onSave,
+  onClear,
 }: PersonalizedFeedSettingsProps) {
   const [isSaving, setIsSaving] = useState(false);
 
-  // Get available sources
-  const availableSources = getAllAvailableSources();
+  // Get available sources - memoize to prevent recreating on every render
+  const availableSources = useMemo(() => getAllAvailableSources(), []);
 
   // Fetch Guardian sections for categories
   const { data: categoriesData } = useQuery({
@@ -39,15 +41,23 @@ export default function PersonalizedFeedSettings({
     queryFn: getGuardianSections,
   });
 
-  const categories = (categoriesData || []).map((section) => ({
-    value: section.id,
-    label: section.webTitle,
-  }));
+  const categories = useMemo(
+    () =>
+      (categoriesData || []).map((section) => ({
+        value: section.id,
+        label: section.webTitle,
+      })),
+    [categoriesData]
+  );
 
-  const sourceOptions = availableSources.map((source) => ({
-    value: source.id,
-    label: source.name,
-  }));
+  const sourceOptions = useMemo(
+    () =>
+      availableSources.map((source) => ({
+        value: source.id,
+        label: source.name,
+      })),
+    [availableSources]
+  );
 
   const { control, reset, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -58,7 +68,7 @@ export default function PersonalizedFeedSettings({
 
   // Load existing preferences when component mounts or opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && categories.length > 0) {
       const preferences = getPersonalizedFeedPreferences();
       if (preferences) {
         const categoryOptions = preferences.categories
@@ -73,7 +83,7 @@ export default function PersonalizedFeedSettings({
             })
           : [];
 
-        const sourceOptions = preferences.sources
+        const selectedSourceOptions = preferences.sources
           ? preferences.sources.split(",").map((sourceId) => {
               const source = availableSources.find((s) => s.id === sourceId);
               return { value: sourceId, label: source?.name || sourceId };
@@ -82,11 +92,11 @@ export default function PersonalizedFeedSettings({
 
         reset({
           categories: categoryOptions,
-          sources: sourceOptions,
+          sources: selectedSourceOptions,
         });
       }
     }
-  }, [isOpen, categories, availableSources, reset]);
+  }, [isOpen, categories, availableSources]);
 
   const handleSave = async (data: FormData) => {
     setIsSaving(true);
@@ -123,7 +133,11 @@ export default function PersonalizedFeedSettings({
       categories: [],
       sources: [],
     });
-    onSave();
+    if (onClear) {
+      onClear();
+    } else {
+      onSave();
+    }
     onClose();
   };
 

@@ -69,6 +69,7 @@ export default function MultiSelectField({
         render={({ field }) => (
           <Select
             {...field}
+            value={field.value || []}
             options={options}
             isMulti
             isClearable

@@ -111,6 +111,12 @@ function Home() {
     }
   };
 
+  const handleSettingsClear = () => {
+    // Clear personalized filters and switch to normal feed
+    setPersonalizedFilters(null);
+    setShowPersonalized(false);
+  };
+
   if (currentIsPending) return <LoadingSpinner />;
 
   if (currentError) {
@@ -238,6 +244,7 @@ function Home() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onSave={handleSettingsSave}
+        onClear={handleSettingsClear}
       />
     </div>
   );
