@@ -1,8 +1,8 @@
 import { useForm, Controller } from "react-hook-form";
-import Select from "react-select";
 import { HiFilter, HiSearch, HiCalendar } from "react-icons/hi";
 import type { SearchFilters } from "../middleware/interfaces/newsApiInterfaces";
 import type { EnhancedSource } from "../middleware/interfaces/aggregatorInterfaces";
+import MultiSelectField from "./MultiSelectField";
 
 interface SearchFiltersProps {
   isVisible: boolean;
@@ -110,38 +110,6 @@ export default function SearchFilters({
     label: source.name,
   }));
 
-  const customSelectStyles = {
-    control: (provided: any) => ({
-      ...provided,
-      border: "1px solid #d1d5db",
-      borderRadius: "0.5rem",
-      minHeight: "2.5rem",
-      "&:hover": {
-        borderColor: "#ef4444",
-      },
-      "&:focus-within": {
-        borderColor: "#ef4444",
-        boxShadow: "0 0 0 2px rgba(239, 68, 68, 0.2)",
-      },
-    }),
-    multiValue: (provided: any) => ({
-      ...provided,
-      backgroundColor: "#fee2e2",
-    }),
-    multiValueLabel: (provided: any) => ({
-      ...provided,
-      color: "#dc2626",
-    }),
-    multiValueRemove: (provided: any) => ({
-      ...provided,
-      color: "#dc2626",
-      "&:hover": {
-        backgroundColor: "#dc2626",
-        color: "white",
-      },
-    }),
-  };
-
   return (
     <div className="max-w-4xl mx-auto mb-8">
       {/* Search Form */}
@@ -225,52 +193,22 @@ export default function SearchFilters({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Category Filter - Now Multi-Select */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Categories
-                </label>
-                <Controller
-                  name="categories"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={categories}
-                      isMulti
-                      isClearable
-                      placeholder="Select categories..."
-                      styles={customSelectStyles}
-                      onChange={(selected) => {
-                        field.onChange(selected || []);
-                      }}
-                    />
-                  )}
-                />
-              </div>
+              <MultiSelectField
+                name="categories"
+                control={control}
+                options={categories}
+                label="Categories"
+                placeholder="Select categories..."
+              />
 
               {/* Sources Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  News Sources
-                </label>
-                <Controller
-                  name="sources"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={sourceOptions}
-                      isMulti
-                      isClearable
-                      placeholder="Select sources..."
-                      styles={customSelectStyles}
-                      onChange={(selected) => {
-                        field.onChange(selected || []);
-                      }}
-                    />
-                  )}
-                />
-              </div>
+              <MultiSelectField
+                name="sources"
+                control={control}
+                options={sourceOptions}
+                label="News Sources"
+                placeholder="Select sources..."
+              />
 
               {/* Date Filter */}
               <div>

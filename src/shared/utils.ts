@@ -39,3 +39,45 @@ export const isMostPopularResponse = (
 export const isValidValue = (value: any): boolean => {
   return value !== undefined && value !== null && value !== "";
 };
+
+// Personalized Feed Preferences
+export interface PersonalizedFeedPreferences {
+  categories?: string;
+  sources?: string;
+}
+
+const PERSONALIZED_FEED_KEY = "personalizedFeedPreferences";
+
+export const getPersonalizedFeedPreferences =
+  (): PersonalizedFeedPreferences | null => {
+    try {
+      const stored = localStorage.getItem(PERSONALIZED_FEED_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error("Error reading personalized feed preferences:", error);
+      return null;
+    }
+  };
+
+export const setPersonalizedFeedPreferences = (
+  preferences: PersonalizedFeedPreferences
+): void => {
+  try {
+    localStorage.setItem(PERSONALIZED_FEED_KEY, JSON.stringify(preferences));
+  } catch (error) {
+    console.error("Error saving personalized feed preferences:", error);
+  }
+};
+
+export const clearPersonalizedFeedPreferences = (): void => {
+  try {
+    localStorage.removeItem(PERSONALIZED_FEED_KEY);
+  } catch (error) {
+    console.error("Error clearing personalized feed preferences:", error);
+  }
+};
+
+export const hasPersonalizedFeedPreferences = (): boolean => {
+  const preferences = getPersonalizedFeedPreferences();
+  return !!(preferences?.categories || preferences?.sources);
+};

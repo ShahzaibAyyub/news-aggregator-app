@@ -24,7 +24,7 @@ export const getAllAvailableSources = (): EnhancedSource[] => {
 };
 
 export const navTabs: NavTabProps[] = [
-  { path: "/", label: "Featured News" },
+  { path: "/", label: "News Feed" },
   { path: "/search", label: "Search Articles" },
 ];
 
