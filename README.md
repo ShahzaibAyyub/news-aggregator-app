@@ -21,6 +21,8 @@ A modern news aggregator built with React, TypeScript, TanStack Query, and Tailw
 
 ## Installation
 
+### Option 1: Local Development
+
 1. Clone the repository and install dependencies:
 
 ```bash
@@ -42,6 +44,28 @@ VITE_NYTIMES_KEY= *your_nytimes_api_key_here*
 ```bash
 npm run dev
 ```
+
+### Option 2: Docker
+
+1. Clone the repository
+
+2. Build the Docker image with your API keys:
+
+```bash
+docker build \
+--build-arg VITE_NEWSAPI_KEY=your_newsapi_key_here \
+--build-arg VITE_GAURDIAN_KEY=your_guardian_api_key_here \
+--build-arg VITE_NYTIMES_KEY=your_nytimes_api_key_here \
+-t news-aggregator-app .
+```
+
+3. Run the Docker container:
+
+```bash
+docker run -p 5173:80 news-aggregator-app
+```
+
+The app will be available at `http://localhost:5173`
 
 ## API Keys Setup
 
