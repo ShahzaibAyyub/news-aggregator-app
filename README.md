@@ -1,10 +1,10 @@
 # News Aggregator App
 
-A modern news aggregator built with React, TypeScript, TanStack Query, and Tailwind CSS. Features articles from multiple news sources including NewsAPI and The Guardian.
+A modern news aggregator built with React, TypeScript, TanStack Query, and Tailwind CSS. Features articles from multiple news sources including NewsAPI, The Guardian, and The New York Times.
 
 ## Features
 
-- 📰 Real-time news fetching from multiple sources (NewsAPI & The Guardian)
+- 📰 Real-time news fetching from multiple sources (NewsAPI, The Guardian & The New York Times)
 - 🔍 Advanced search with filtering by source, category, and date
 - 🎨 Newspaper-style grid layout with featured articles
 - 📱 Responsive design optimized for all devices
@@ -17,6 +17,7 @@ A modern news aggregator built with React, TypeScript, TanStack Query, and Tailw
 
 - **NewsAPI** - Comprehensive news from various publishers
 - **The Guardian** - Quality journalism from The Guardian newspaper
+- **The New York Times** - Premium news content from The New York Times
 
 ## Installation
 
@@ -32,7 +33,8 @@ Create a `.env` file in the root directory with the following:
 
 ```bash
 VITE_NEWSAPI_KEY=your_newsapi_key_here
-VITE_GUARDIAN_API_KEY=your_guardian_api_key_here
+VITE_GAURDIAN_KEY=your_guardian_api_key_here
+VITE_NYTIMES_KEY=your_nytimes_api_key_here
 ```
 
 3. Start the development server:
@@ -56,6 +58,13 @@ npm run dev
 2. Register for a developer key
 3. Copy your API key
 4. Add it to your `.env` file as `VITE_GUARDIAN_API_KEY`
+
+### New York Times API
+
+1. Visit [NY Times Developer Portal](https://developer.nytimes.com/apis)
+2. Sign up for a developer account
+3. Create an app and get your API key for the Article Search API
+4. Add it to your `.env` file as `VITE_NYTIMES_API_KEY`
 
 ## Technologies Used
 

@@ -1,5 +1,12 @@
 export enum SourceType {
   NEWSAPI = "newsapi",
   GUARDIAN = "guardian",
-  BOTH = "both",
+  NYTIMES = "nytimes",
+  ALL = "all",
+}
+
+export enum SourceName {
+  NEWSAPI = "NewsAPI",
+  GUARDIAN = "The Guardian",
+  NYTIMES = "The New York Times",
 }
