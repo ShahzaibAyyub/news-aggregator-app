@@ -1,6 +1,6 @@
+import type { NavTabProps } from "../components/NavTab";
 import type { EnhancedSource } from "../middleware/interfaces/aggregatorInterfaces";
 import { SourceName, SourceType } from "./enums";
-import type { NavTabProps } from "./interfaces";
 
 // Get available sources (hardcoded to NewsAPI, Guardian, and NY Times)
 export const getAllAvailableSources = (): EnhancedSource[] => {
@@ -24,7 +24,7 @@ export const getAllAvailableSources = (): EnhancedSource[] => {
 };
 
 export const navTabs: NavTabProps[] = [
-  { path: "/", label: "Featured News" },
+  { path: "/", label: "News Feed" },
   { path: "/search", label: "Search Articles" },
 ];
 

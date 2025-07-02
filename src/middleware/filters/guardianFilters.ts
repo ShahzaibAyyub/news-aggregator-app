@@ -17,9 +17,18 @@ export const convertToGuardianParams = (
   if (filters.query) {
     guardianParams.query = filters.query;
   }
+
+  // Handle multiple categories with OR logic
   if (filters.category) {
-    guardianParams.section = filters.category;
+    const categories = filters.category.split(",").map((cat) => cat.trim());
+    if (categories.length === 1) {
+      guardianParams.section = categories[0];
+    } else {
+      // Multiple categories: use OR logic - Guardian API supports section=politics|world|business
+      guardianParams.section = categories.join("|");
+    }
   }
+
   if (filters.from) {
     guardianParams.fromDate = filters.from;
   }
