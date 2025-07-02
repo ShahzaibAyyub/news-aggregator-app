@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   searchAllSources,
@@ -14,6 +14,7 @@ import {
   REFRESH_INTERVAL,
 } from "../shared/constants";
 import type { SearchFilters } from "../middleware/interfaces/newsApiInterfaces";
+import { isValidValue } from "../shared/utils";
 
 function Search() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,17 +41,19 @@ function Search() {
     refetch: refetchSearch,
     isFetching,
   } = useQuery({
-    queryKey: ["search-all-sources", filters],
+    queryKey: ["search-all-sources", JSON.stringify(filters)],
     queryFn: () => searchAllSources(filters),
-    enabled:
-      hasSearched &&
-      (!!filters.query ||
-        !!filters.category ||
-        !!filters.sources ||
-        !!filters.from),
+    enabled: hasSearched,
     staleTime: STALE_TIME,
     refetchInterval: REFRESH_INTERVAL,
   });
+
+  // Effect to handle filter changes and trigger refetch
+  useEffect(() => {
+    if (hasSearched) {
+      refetchSearch();
+    }
+  }, [filters, hasSearched, refetchSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,21 +63,45 @@ function Search() {
     if (hasSearchCriteria) {
       setFilters((prev) => ({ ...prev, query: searchQuery.trim() }));
       setHasSearched(true);
-      setTimeout(() => refetchSearch(), 100);
     }
   };
 
   const handleFiltersChange = (newFilters: SearchFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+    // Start with default filters
+    const cleanedFilters: SearchFilters = { sortBy: "publishedAt" };
+
+    const queryToUse = searchQuery.trim() || newFilters.query;
+    if (isValidValue(queryToUse)) {
+      cleanedFilters.query = queryToUse;
+    }
+    if (isValidValue(newFilters.category)) {
+      cleanedFilters.category = newFilters.category;
+    }
+    if (isValidValue(newFilters.sources)) {
+      cleanedFilters.sources = newFilters.sources;
+    }
+    if (isValidValue(newFilters.from)) {
+      cleanedFilters.from = newFilters.from;
+    }
+    if (isValidValue(newFilters.to)) {
+      cleanedFilters.to = newFilters.to;
+    }
+
+    // Handle sortBy separately since it has different validation (no empty string check needed)
+    if (newFilters.sortBy !== undefined && newFilters.sortBy !== null) {
+      cleanedFilters.sortBy = newFilters.sortBy;
+    }
+
+    setFilters(cleanedFilters);
+
     const hasNewSearchCriteria =
       searchQuery.trim() ||
-      newFilters.category ||
-      newFilters.sources ||
-      newFilters.from;
+      cleanedFilters.category ||
+      cleanedFilters.sources ||
+      cleanedFilters.from;
 
     if (hasNewSearchCriteria) {
       setHasSearched(true);
-      setTimeout(() => refetchSearch(), 100);
     }
   };
 

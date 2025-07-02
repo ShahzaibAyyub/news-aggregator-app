@@ -1,5 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import type { NavTabProps } from "../shared/interfaces";
+
+export interface NavTabProps {
+  path: string;
+  label: string;
+}
 
 function NavTab({ path, label }: NavTabProps) {
   const location = useLocation();

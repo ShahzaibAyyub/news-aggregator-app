@@ -32,9 +32,9 @@ npm install
 Create a `.env` file in the root directory with the following:
 
 ```bash
-VITE_NEWSAPI_KEY=your_newsapi_key_here
-VITE_GAURDIAN_KEY=your_guardian_api_key_here
-VITE_NYTIMES_KEY=your_nytimes_api_key_here
+VITE_NEWSAPI_KEY= *your_newsapi_key_here*
+VITE_GAURDIAN_KEY= *your_guardian_api_key_here*
+VITE_NYTIMES_KEY= *your_nytimes_api_key_here*
 ```
 
 3. Start the development server:
@@ -57,20 +57,21 @@ npm run dev
 1. Visit [Guardian Open Platform](https://open-platform.theguardian.com/access/)
 2. Register for a developer key
 3. Copy your API key
-4. Add it to your `.env` file as `VITE_GUARDIAN_API_KEY`
+4. Add it to your `.env` file as `VITE_GAURDIAN_KEY`
 
 ### New York Times API
 
 1. Visit [NY Times Developer Portal](https://developer.nytimes.com/apis)
 2. Sign up for a developer account
 3. Create an app and get your API key for the Article Search API
-4. Add it to your `.env` file as `VITE_NYTIMES_API_KEY`
+4. Add it to your `.env` file as `VITE_NYTIMES_KEY`
 
 ## Technologies Used
 
 - **React 19** - UI framework
 - **TypeScript** - Type safety
+- **Vite** - Build tool
+- **Tailwind CSS** - Styling
 - **TanStack Query** - Data fetching and caching
 - **Axios** - HTTP client
-- **Tailwind CSS** - Styling
-- **Vite** - Build tool
+- **React Hook From** - Form Handling

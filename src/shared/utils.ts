@@ -35,3 +35,7 @@ export const isMostPopularResponse = (
 ): response is NyTimesMostPopularResponse => {
   return "results" in response && "num_results" in response;
 };
+
+export const isValidValue = (value: any): boolean => {
+  return value !== undefined && value !== null && value !== "";
+};
