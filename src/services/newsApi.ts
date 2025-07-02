@@ -68,6 +68,7 @@ export const searchArticlesWithFilters = async (
   let endpoint = "/everything";
 
   // If category is specified and no other filters, use top-headlines endpoint
+  // Note: NewsAPI only supports single category, so we use the first one
   if (
     filters.category &&
     !filters.query &&
@@ -75,7 +76,9 @@ export const searchArticlesWithFilters = async (
     !filters.domains
   ) {
     endpoint = "/top-headlines";
-    params.category = filters.category;
+    // Handle multiple categories by using the first one only (NewsAPI limitation)
+    const categories = filters.category.split(",").map((cat) => cat.trim());
+    params.category = categories[0];
     params.country = filters.country || "us";
   }
 

@@ -46,8 +46,16 @@ export const parseToNyTimesParams = (params: ContentParams): string => {
     queryParams.append("end_date", formatNyTimesDate(params.fromDate));
   }
 
+  // Handle multiple categories with OR logic
   if (params.category) {
-    queryParams.append("fq", `section.name: ${params.category}`);
+    const categories = params.category.split(",").map((cat) => cat.trim());
+    if (categories.length === 1) {
+      queryParams.append("fq", `section.name:"${categories[0]}"`);
+    } else {
+      // Multiple categories: section.name:("Category1" OR "Category2" OR "Category3")
+      const categoryQuery = categories.map((cat) => `"${cat}"`).join(" OR ");
+      queryParams.append("fq", `section.name:(${categoryQuery})`);
+    }
   }
 
   if (params.sortBy) {

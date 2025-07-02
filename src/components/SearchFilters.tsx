@@ -51,14 +51,15 @@ export default function SearchFilters({
     defaultValues: {
       date: currentFilters.from || "",
       categories: currentFilters.category
-        ? [
-            {
-              value: currentFilters.category,
-              label:
-                categories.find((c) => c.value === currentFilters.category)
-                  ?.label || currentFilters.category,
-            },
-          ]
+        ? currentFilters.category.split(",").map((categoryId) => {
+            const category = categories.find(
+              (c) => c.value === categoryId.trim()
+            );
+            return {
+              value: categoryId.trim(),
+              label: category?.label || categoryId.trim(),
+            };
+          })
         : [],
       sources: currentFilters.sources
         ? currentFilters.sources.split(",").map((sourceId) => {
@@ -77,7 +78,7 @@ export default function SearchFilters({
       to: data.date || undefined, // Same date for both from and to
       category:
         data.categories && data.categories.length > 0
-          ? data.categories[0].value
+          ? data.categories.map((c) => c.value).join(",")
           : undefined,
       sources:
         data.sources && data.sources.length > 0
@@ -223,10 +224,10 @@ export default function SearchFilters({
 
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Category Filter */}
+              {/* Category Filter - Now Multi-Select */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
+                  Categories
                 </label>
                 <Controller
                   name="categories"
@@ -235,13 +236,12 @@ export default function SearchFilters({
                     <Select
                       {...field}
                       options={categories}
-                      isMulti={false}
+                      isMulti
                       isClearable
-                      placeholder="Select category..."
+                      placeholder="Select categories..."
                       styles={customSelectStyles}
-                      value={field.value?.[0] || null}
                       onChange={(selected) => {
-                        field.onChange(selected ? [selected] : []);
+                        field.onChange(selected || []);
                       }}
                     />
                   )}
